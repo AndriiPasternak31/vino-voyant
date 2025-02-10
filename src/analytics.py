@@ -10,19 +10,16 @@ import json
 import boto3
 import botocore
 import io
+import streamlit as st
 
 def generate_insight(data_description, visualization_type, metrics):
     """Generate business insight using LLM."""
     try:
-        api_key = None
+        # Try to get API key from Streamlit secrets
         try:
-            with open('.env') as f:
-                for line in f:
-                    if line.startswith('CANDIDATE_API_KEY='):
-                        api_key = line.strip().split('=')[1]
-                        break
+            api_key = st.secrets["candidate"]["api_key"]
         except:
-            return "Please configure the API key to get AI-generated insights."
+            return "Please configure the API key in Streamlit secrets to get AI-generated insights."
 
         prompt = f"""As a wine industry expert and data analyst, provide a brief but insightful business analysis of the following data visualization:
 
@@ -60,7 +57,7 @@ Provide your analysis in 2-3 concise sentences, focusing on practical business i
             return "Unable to generate AI insight at the moment. Please check the visualization description for key insights."
             
     except Exception as e:
-        return "Unable to generate AI insight at the moment. Please check the visualization description for key insights."
+        return f"Unable to generate AI insight at the moment: {str(e)}"
 
 def create_ratings_distribution(df):
     """Create a box plot of wine ratings by country."""
