@@ -23,6 +23,17 @@ logger = logging.getLogger(__name__)
 # Create models directory for caching
 os.makedirs('models', exist_ok=True)
 
+# Initialize API key from secrets if available
+if 'candidate_api_key' not in st.session_state:
+    try:
+        st.session_state.candidate_api_key = st.secrets["candidate"]["api_key"]
+        st.session_state.api_key_configured = True
+        logger.info("Successfully loaded API key from secrets")
+    except Exception as e:
+        logger.warning(f"Could not load API key from secrets: {str(e)}")
+        st.session_state.candidate_api_key = None
+        st.session_state.api_key_configured = False
+
 # Page config
 st.set_page_config(
     page_title="VinoVoyant - Wine Origin Predictor",
@@ -47,16 +58,6 @@ def update_data_source_indicator():
         data_source_placeholder.error("❌ Error loading data from S3")
 
 if page == "Prediction":
-    # Initialize session state for API key
-    if 'candidate_api_key' not in st.session_state:
-        # Try to get API key from Streamlit secrets first
-        try:
-            st.session_state.candidate_api_key = st.secrets["candidate"]["api_key"]
-            st.session_state.api_key_configured = True
-        except:
-            st.session_state.candidate_api_key = None
-            st.session_state.api_key_configured = False
-
     # App title and description
     st.title("🍷 VinoVoyant - Wine Origin Predictor")
     st.markdown("""
@@ -267,16 +268,6 @@ elif page == "Analytics":
     Explore insights about wine characteristics, pricing, and market positioning across different countries.
     These visualizations help understand market trends and consumer preferences.
     """)
-    
-    # Initialize API key if available in secrets
-    if 'candidate_api_key' not in st.session_state:
-        try:
-            st.session_state.candidate_api_key = st.secrets["candidate"]["api_key"]
-            st.session_state.api_key_configured = True
-        except:
-            st.warning("⚠️ API key not configured. AI-generated insights will not be available. Please configure the API key in the Prediction tab first.")
-            st.session_state.candidate_api_key = None
-            st.session_state.api_key_configured = False
     
     # Load data for analytics
     with st.spinner("Loading data for analysis..."):

@@ -15,13 +15,17 @@ import streamlit as st
 def generate_insight(data_description, visualization_type, metrics):
     """Generate business insight using LLM."""
     try:
-        # Try to get API key from session state
-        if 'candidate_api_key' not in st.session_state:
+        # Check if API key is configured
+        if not st.session_state.get('api_key_configured', False):
+            print("API key not configured in session state")
             return "Please configure the API key in the Prediction tab first to get AI-generated insights."
         
-        api_key = st.session_state.candidate_api_key
+        api_key = st.session_state.get('candidate_api_key')
         if not api_key:
+            print("API key is empty in session state")
             return "Please configure the API key in the Prediction tab first to get AI-generated insights."
+
+        print(f"Generating insight for {visualization_type} with API key: {api_key[:5]}...")  # Log first 5 chars of API key
 
         prompt = f"""As a wine industry expert and data analyst, provide a brief but insightful business analysis of the following data visualization:
 
@@ -61,12 +65,14 @@ Provide your analysis in 2-3 concise sentences, focusing on practical business i
             print(f"Generated insight: {content}")  # Debug log
             return content
         else:
-            print(f"API error: {response.text}")  # Debug log
-            return "Unable to generate AI insight at the moment. Please check the visualization description for key insights."
+            error_msg = f"API error (status {response.status_code}): {response.text}"
+            print(error_msg)  # Debug log
+            return f"Unable to generate AI insight: {error_msg}"
             
     except Exception as e:
-        print(f"Error generating insight: {str(e)}")  # Debug log
-        return f"Unable to generate AI insight at the moment: {str(e)}"
+        error_msg = f"Error generating insight: {str(e)}"
+        print(error_msg)  # Debug log
+        return error_msg
 
 def create_ratings_distribution(df):
     """Create a box plot of wine ratings by country."""
