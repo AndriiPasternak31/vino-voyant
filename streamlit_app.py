@@ -268,6 +268,16 @@ elif page == "Analytics":
     These visualizations help understand market trends and consumer preferences.
     """)
     
+    # Initialize API key if available in secrets
+    if 'candidate_api_key' not in st.session_state:
+        try:
+            st.session_state.candidate_api_key = st.secrets["candidate"]["api_key"]
+            st.session_state.api_key_configured = True
+        except:
+            st.warning("⚠️ API key not configured. AI-generated insights will not be available. Please configure the API key in the Prediction tab first.")
+            st.session_state.candidate_api_key = None
+            st.session_state.api_key_configured = False
+    
     # Load data for analytics
     with st.spinner("Loading data for analysis..."):
         df = load_and_preprocess_data()

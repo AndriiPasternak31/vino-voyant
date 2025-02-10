@@ -15,11 +15,13 @@ import streamlit as st
 def generate_insight(data_description, visualization_type, metrics):
     """Generate business insight using LLM."""
     try:
-        # Try to get API key from Streamlit secrets
-        try:
-            api_key = st.secrets["candidate"]["api_key"]
-        except:
-            return "Please configure the API key in Streamlit secrets to get AI-generated insights."
+        # Try to get API key from session state
+        if 'candidate_api_key' not in st.session_state:
+            return "Please configure the API key in the Prediction tab first to get AI-generated insights."
+        
+        api_key = st.session_state.candidate_api_key
+        if not api_key:
+            return "Please configure the API key in the Prediction tab first to get AI-generated insights."
 
         prompt = f"""As a wine industry expert and data analyst, provide a brief but insightful business analysis of the following data visualization:
 
@@ -34,6 +36,8 @@ Focus on:
 
 Provide your analysis in 2-3 concise sentences, focusing on practical business implications."""
 
+        print(f"Making insight API request for {visualization_type}")  # Debug log
+        
         response = requests.post(
             "https://candidate-llm.extraction.artificialos.com/v1/chat/completions",
             headers={
@@ -50,13 +54,18 @@ Provide your analysis in 2-3 concise sentences, focusing on practical business i
             }
         )
         
+        print(f"Response status: {response.status_code}")  # Debug log
+        
         if response.status_code == 200:
             content = response.json()['choices'][0]['message']['content']
+            print(f"Generated insight: {content}")  # Debug log
             return content
         else:
+            print(f"API error: {response.text}")  # Debug log
             return "Unable to generate AI insight at the moment. Please check the visualization description for key insights."
             
     except Exception as e:
+        print(f"Error generating insight: {str(e)}")  # Debug log
         return f"Unable to generate AI insight at the moment: {str(e)}"
 
 def create_ratings_distribution(df):
